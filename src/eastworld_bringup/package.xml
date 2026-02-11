@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>eastworld_bringup</name>
+  <version>0.1.0</version>
+  <description>Bringup package for EastWorld AutonomyStack (launch files and configs)</description>
+  <maintainer email="shoonkit@virtuals.io">EastWorld's Janitor</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>mavros</exec_depend>
+  <exec_depend>fast_livo</exec_depend>
+  <exec_depend>livox_ros_driver2</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
