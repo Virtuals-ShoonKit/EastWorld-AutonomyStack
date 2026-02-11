@@ -136,6 +136,7 @@ class LIVMapper {
   bool raycast_en_ = false;
   int lidar_en_ = 1;
   bool first_frame_finished_ = false;
+  bool print_timing_ = false;
   int grid_size_, patch_size_, patch_pyrimid_level_;
   double outlier_threshold_;
   double plot_time_;

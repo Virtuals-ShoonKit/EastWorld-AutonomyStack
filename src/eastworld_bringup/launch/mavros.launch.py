@@ -62,6 +62,7 @@ def generate_launch_description():
     mavros_node = Node(
         package="mavros",
         executable="mavros_node",
+        namespace="mavros",
         output="screen",
         respawn=LaunchConfiguration("respawn"),
         parameters=[

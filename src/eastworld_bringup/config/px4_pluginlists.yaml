@@ -41,14 +41,14 @@
       # obstacle
       # obstacle_distance
       # optical_flow
-      - odometry
+      # odometry: disabled - conflicts with local_position on /local (PoseStamped vs Odometry)
       # onboard_computer_status: disabled - conflicts with sys_status on /status (UInt8 vs State)
       - param
       - play_tune
       # px4flow
       # rallypoint
-      - rangefinder
-      - rc_io
+      # - rangefinder
+      # rc_io: disabled - conflicts on /mavros/rc/in topic (RCIn_ type clash)
       # setpoint_accel
       # setpoint_attitude
       - setpoint_position

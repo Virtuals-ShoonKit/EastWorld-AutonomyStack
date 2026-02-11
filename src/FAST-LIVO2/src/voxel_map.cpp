@@ -42,6 +42,9 @@ void loadVoxelConfig(rclcpp::Node::SharedPtr node, VoxelMapConfig &voxel_config)
   node->declare_parameter("publish.pub_plane_en", false);
   voxel_config.is_pub_plane_map_ = node->get_parameter("publish.pub_plane_en").as_bool();
 
+  node->declare_parameter("debug.print_lio_stats", false);
+  voxel_config.print_lio_stats_ = node->get_parameter("debug.print_lio_stats").as_bool();
+
   node->declare_parameter("lio.max_layer", 1);
   voxel_config.max_layer_ = node->get_parameter("lio.max_layer").as_int();
 
@@ -431,11 +434,13 @@ void VoxelMapManager::StateEstimation(StatesGroup &state_propagat) {
       total_residual += fabs(ptpl_list_[i].dis_to_plane_);
     }
     effct_feat_num_ = ptpl_list_.size();
-    std::cout << "[ LIO ] Raw feature num: " << undistort_size_
-              << ", downsampled feature num:" << feats_down_size_
-              << " effective feature num: " << effct_feat_num_
-              << " average residual: " << total_residual / effct_feat_num_
-              << std::endl;
+    if (config_setting_.print_lio_stats_ && effct_feat_num_ > 0) {
+      std::cout << "[ LIO ] Raw feature num: " << undistort_size_
+                << ", downsampled feature num:" << feats_down_size_
+                << " effective feature num: " << effct_feat_num_
+                << " average residual: " << total_residual / effct_feat_num_
+                << std::endl;
+    }
 
     /*** Computation of Measuremnt Jacobian matrix H and measurents covarience
      * ***/

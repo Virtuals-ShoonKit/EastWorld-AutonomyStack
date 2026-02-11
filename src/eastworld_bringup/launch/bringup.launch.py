@@ -34,8 +34,8 @@ def generate_launch_description():
     mid360_config = os.path.join(bringup_dir, "config", "mid360.yaml")
     pluginlists_yaml = os.path.join(bringup_dir, "config", "px4_pluginlists.yaml")
     config_yaml = os.path.join(bringup_dir, "config", "px4_config.yaml")
+    rviz_config = os.path.join(bringup_dir, "config", "fast-livo.rviz")
     camera_config = os.path.join(fast_livo_dir, "config", "camera_pinhole.yaml")
-    rviz_config = os.path.join(fast_livo_dir, "rviz_cfg", "fast_livo2.rviz")
     livox_json = os.path.join(livox_dir, "config", "MID360_config.json")
 
     # ── Launch arguments ───────────────────────────────────────────────
@@ -57,14 +57,45 @@ def generate_launch_description():
         description="GCS bridge URL (QGC on localhost)",
     )
 
+    stack_log_level_arg = DeclareLaunchArgument(
+        "stack_log_level",
+        default_value="warn",
+        description="Log level for Livox, FAST-LIVO, MAVROS",
+    )
+
+    rviz_log_level_arg = DeclareLaunchArgument(
+        "rviz_log_level",
+        default_value="error",
+        description="RViz log level",
+    )
+
+    use_map_camera_tf_arg = DeclareLaunchArgument(
+        "use_map_camera_tf",
+        default_value="false",
+        description="Publish static TF map->camera_init",
+    )
+
+    map_frame_arg = DeclareLaunchArgument(
+        "map_frame",
+        default_value="map",
+        description="Parent frame for static TF",
+    )
+
+    camera_init_frame_arg = DeclareLaunchArgument(
+        "camera_init_frame",
+        default_value="camera_init",
+        description="Child frame for static TF",
+    )
+
     # ── 1. Livox MID360 driver ─────────────────────────────────────────
     livox_driver = Node(
         package="livox_ros_driver2",
         executable="livox_ros_driver2_node",
         name="livox_lidar_publisher",
         output="screen",
+        arguments=["--ros-args", "--log-level", LaunchConfiguration("stack_log_level")],
         parameters=[
-            {"xfer_format": 0},
+            {"xfer_format": 1},  # 0=PointCloud2, 1=CustomMsg (required by FAST-LIVO lidar_type 1)
             {"multi_topic": 0},
             {"data_src": 0},
             {"publish_freq": 20.0},
@@ -82,6 +113,7 @@ def generate_launch_description():
         name="laserMapping",
         output="screen",
         respawn=True,
+        arguments=["--ros-args", "--log-level", LaunchConfiguration("stack_log_level")],
         parameters=[
             mid360_config,
             {"camera_config": camera_config},
@@ -92,7 +124,7 @@ def generate_launch_description():
     mavros_node = Node(
         package="mavros",
         executable="mavros_node",
-        name="mavros",
+        namespace="mavros",
         output="screen",
         respawn=True,
         parameters=[
@@ -106,7 +138,21 @@ def generate_launch_description():
                 "fcu_protocol": "v2.0",
             },
         ],
-        arguments=["--ros-args", "--log-level", "warn"],
+        arguments=["--ros-args", "--log-level", LaunchConfiguration("stack_log_level")],
+    )
+
+    map_to_camera_init_tf = Node(
+        condition=IfCondition(LaunchConfiguration("use_map_camera_tf")),
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="map_to_camera_init_tf",
+        output="screen",
+        arguments=[
+            "0", "0", "0", "0", "0", "0",
+            LaunchConfiguration("map_frame"),
+            LaunchConfiguration("camera_init_frame"),
+            "--ros-args", "--log-level", LaunchConfiguration("stack_log_level"),
+        ],
     )
 
     # ── 4. RViz2 (optional) ───────────────────────────────────────────
@@ -116,7 +162,10 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         output="screen",
-        arguments=["-d", rviz_config],
+        arguments=[
+            "-d", rviz_config,
+            "--ros-args", "--log-level", LaunchConfiguration("rviz_log_level"),
+        ],
     )
 
     # ── Compose ───────────────────────────────────────────────────────
@@ -124,8 +173,14 @@ def generate_launch_description():
         use_rviz_arg,
         fcu_url_arg,
         gcs_url_arg,
+        stack_log_level_arg,
+        rviz_log_level_arg,
+        use_map_camera_tf_arg,
+        map_frame_arg,
+        camera_init_frame_arg,
         livox_driver,
         fast_livo2,
         mavros_node,
+        map_to_camera_init_tf,
         rviz2,
     ])

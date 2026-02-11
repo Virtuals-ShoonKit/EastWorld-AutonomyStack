@@ -107,6 +107,7 @@ void LIVMapper::ReadParameters()
   node_->declare_parameter("extrin_calib.Rcl", vector<double>());
   node_->declare_parameter("debug.plot_time", -10.0);
   node_->declare_parameter("debug.frame_cnt", 6);
+  node_->declare_parameter("debug.print_timing", false);
 
   node_->declare_parameter("publish.blind_rgb_points", 0.01);
   node_->declare_parameter("publish.pub_scan_num", 1);
@@ -166,6 +167,7 @@ void LIVMapper::ReadParameters()
   cameraextrin_r_ = node_->get_parameter("extrin_calib.Rcl").as_double_array();
   plot_time_ = node_->get_parameter("debug.plot_time").as_double();
   frame_cnt_ = node_->get_parameter("debug.frame_cnt").as_int();
+  print_timing_ = node_->get_parameter("debug.print_timing").as_bool();
 
   blind_rgb_points_ = node_->get_parameter("publish.blind_rgb_points").as_double();
   pub_scan_num_ = node_->get_parameter("publish.pub_scan_num").as_int();
@@ -184,28 +186,31 @@ void LIVMapper::InitializeComponents()
 
   voxel_map_manager_->extT_ << VEC_FROM_ARRAY(extrin_t_);
   voxel_map_manager_->extR_ << MAT_FROM_ARRAY(extrin_r_);
-  // 载入相机参数
-  YAML::Node camera_config = YAML::LoadFile(camera_config_);
-  if (!vk::camera_loader::loadFromYaml(camera_config, vio_manager_->cam_))
-    throw std::runtime_error("Camera model not correctly specified.");
-  // 视觉里程计初始化
-  vio_manager_->grid_size_ = grid_size_;
-  vio_manager_->patch_size_ = patch_size_;
-  vio_manager_->outlier_threshold_ = outlier_threshold_;
-  vio_manager_->SetImuToLidarExtrinsic(ext_t_, ext_r_);
-  vio_manager_->SetLidarToCameraExtrinsic(cameraextrin_r_, cameraextrin_t_);
-  // vio_manager的state_和LIVMapper的state_和state_propagat_是一致的，但是voxel_map的需要手动同步
-  vio_manager_->state_ = &state_;
-  vio_manager_->state_propagat_ = &state_propagat_;
-  vio_manager_->max_iterations_ = max_iterations_;
-  vio_manager_->img_point_cov_ = img_point_cov_;
-  vio_manager_->normal_en_ = normal_en_;
-  vio_manager_->inverse_composition_en_ = inverse_composition_en_;
-  vio_manager_->raycast_en_ = raycast_en_;
-  vio_manager_->patch_pyrimid_level_ = patch_pyrimid_level_;
-  vio_manager_->exposure_estimate_en_ = exposure_estimate_en_;
-  vio_manager_->colmap_output_en_ = colmap_output_en_;
-  vio_manager_->InitializeVIO();
+  if (img_en_)
+  {
+    // Load camera/VIO components only when image input is enabled.
+    YAML::Node camera_config = YAML::LoadFile(camera_config_);
+    if (!vk::camera_loader::loadFromYaml(camera_config, vio_manager_->cam_))
+      throw std::runtime_error("Camera model not correctly specified.");
+    // 视觉里程计初始化
+    vio_manager_->grid_size_ = grid_size_;
+    vio_manager_->patch_size_ = patch_size_;
+    vio_manager_->outlier_threshold_ = outlier_threshold_;
+    vio_manager_->SetImuToLidarExtrinsic(ext_t_, ext_r_);
+    vio_manager_->SetLidarToCameraExtrinsic(cameraextrin_r_, cameraextrin_t_);
+    // vio_manager的state_和LIVMapper的state_和state_propagat_是一致的，但是voxel_map的需要手动同步
+    vio_manager_->state_ = &state_;
+    vio_manager_->state_propagat_ = &state_propagat_;
+    vio_manager_->max_iterations_ = max_iterations_;
+    vio_manager_->img_point_cov_ = img_point_cov_;
+    vio_manager_->normal_en_ = normal_en_;
+    vio_manager_->inverse_composition_en_ = inverse_composition_en_;
+    vio_manager_->raycast_en_ = raycast_en_;
+    vio_manager_->patch_pyrimid_level_ = patch_pyrimid_level_;
+    vio_manager_->exposure_estimate_en_ = exposure_estimate_en_;
+    vio_manager_->colmap_output_en_ = colmap_output_en_;
+    vio_manager_->InitializeVIO();
+  }
 
   p_imu_->SetExtrinsic(ext_t_, ext_r_);
   p_imu_->SetGyrCovScale(V3D(gyr_cov_, gyr_cov_, gyr_cov_));
@@ -555,7 +560,8 @@ void LIVMapper::HandleLIO()
   }
   // voxelmap_manager_->UpdateVoxelMap(voxelmap_manager_->pv_list_);
   voxel_map_manager_->UpdateVoxelMapLRU(voxel_map_manager_->pv_list_);
-  std::cout << "[ LIO ] Update Voxel Map" << std::endl;
+  if (print_timing_)
+    std::cout << "[ LIO ] Update Voxel Map" << std::endl;
   pv_list_ = voxel_map_manager_->pv_list_;
 
   double t4 = omp_get_wtime();
@@ -611,32 +617,34 @@ void LIVMapper::HandleLIO()
   //         "\033[1;36m[ LIO mapping time ]: average: icp: %0.6f secs, map
   //         incre: %0.6f secs, total: %0.6f secs.\033[0m\n", t2 - t1, t4 - t3,
   //         t4 - t0, aver_time_icp, aver_time_map_inre, aver_time_consu);
-  printf(
-      "\033[1;34m+-------------------------------------------------------------"
-      "+\033[0m\n");
-  printf(
-      "\033[1;34m|                         LIO Mapping Time                    "
-      "|\033[0m\n");
-  printf(
-      "\033[1;34m+-------------------------------------------------------------"
-      "+\033[0m\n");
-  printf("\033[1;34m| %-29s | %-27s |\033[0m\n", "Algorithm Stage",
-         "Time (secs)");
-  printf(
-      "\033[1;34m+-------------------------------------------------------------"
-      "+\033[0m\n");
-  printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "DownSample", t_down - t0);
-  printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "ICP", t2 - t1);
-  printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "updateVoxelMap", t4 - t3);
-  printf(
-      "\033[1;34m+-------------------------------------------------------------"
-      "+\033[0m\n");
-  printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "Current Total Time", t4 - t0);
-  printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "Average Total Time",
-         aver_time_consu_);
-  printf(
-      "\033[1;34m+-------------------------------------------------------------"
-      "+\033[0m\n");
+  if (print_timing_) {
+    printf(
+        "\033[1;34m+-------------------------------------------------------------"
+        "+\033[0m\n");
+    printf(
+        "\033[1;34m|                         LIO Mapping Time                    "
+        "|\033[0m\n");
+    printf(
+        "\033[1;34m+-------------------------------------------------------------"
+        "+\033[0m\n");
+    printf("\033[1;34m| %-29s | %-27s |\033[0m\n", "Algorithm Stage",
+           "Time (secs)");
+    printf(
+        "\033[1;34m+-------------------------------------------------------------"
+        "+\033[0m\n");
+    printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "DownSample", t_down - t0);
+    printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "ICP", t2 - t1);
+    printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "updateVoxelMap", t4 - t3);
+    printf(
+        "\033[1;34m+-------------------------------------------------------------"
+        "+\033[0m\n");
+    printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "Current Total Time", t4 - t0);
+    printf("\033[1;36m| %-29s | %-27f |\033[0m\n", "Average Total Time",
+           aver_time_consu_);
+    printf(
+        "\033[1;34m+-------------------------------------------------------------"
+        "+\033[0m\n");
+  }
 
   euler_cur_ = RotMtoEuler(state_.rot_end);
   fout_out_ << std::setw(20)
