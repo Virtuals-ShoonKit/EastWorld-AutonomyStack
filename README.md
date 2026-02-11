@@ -60,7 +60,8 @@ source install/setup.bash
 2. Launch Mid-360 driver + SPARK-FAST-LIO:
 
    ```bash
-   ros2 launch eastworld_bringup autonomy_launch.py
+   source install/setup.bash
+   ros2 launch eastworld_bringup autonomy_launch.py config_file:=mid360.yaml rviz:=false
    ```
 
    Optional: `config_file:=mid360.yaml`, `rviz:=true`, `use_sim_time:=false`.

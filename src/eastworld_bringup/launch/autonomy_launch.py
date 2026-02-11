@@ -69,10 +69,11 @@ def generate_launch_description():
         output='screen',
     )
 
+    rviz_config = os.path.join(config_dir, 'mid360.rviz')
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
-        arguments=['-d', os.path.join(get_package_share_directory('spark_fast_lio'), 'rviz', 'velodyne_mit.rviz')],
+        arguments=['-d', rviz_config],
         condition=IfCondition(use_rviz),
         output='screen',
     )
