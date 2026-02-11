@@ -1,6 +1,8 @@
 # EastWorld Autonomy Stack
 
-ROS2 Humble workspace: **SPARK-FAST-LIO** ([MIT-SPARK/spark-fast-lio](https://github.com/MIT-SPARK/spark-fast-lio)) with Livox Mid-360 and Pixhawk (PX4 v1.16). Odometry/pose from LIO can be fused into PX4 EKF2 via px4_msgs and uXRCE-DDS.
+Autonomy software for [EastWorld](https://github.com/Virtuals-ShoonKit) autonomous agents. Provides LiDAR-inertial odometry and flight-controller integration so an agent can localise itself and feed pose/velocity to PX4 for GPS-denied flight.
+
+Built on ROS 2 Humble with a Livox Mid-360, **SPARK-FAST-LIO** ([fork](https://github.com/Virtuals-ShoonKit/spark-fast-lio)), and Pixhawk (PX4 v1.16). The LIO node publishes odometry directly to `/fmu/in/vehicle_visual_odometry` (`px4_msgs/VehicleOdometry`) for EKF2 fusion over uXRCE-DDS.
 
 ## Hardware
 
@@ -28,7 +30,7 @@ cd EastWorld-AutonomyStack
 git submodule update --init --recursive
 ```
 
-If you already had the repo cloned, run `git submodule sync` then `git submodule update --init --recursive` to switch the LIO submodule to SPARK-FAST-LIO.
+If you already had the repo cloned, run `git submodule sync` then `git submodule update --init --recursive` to update submodules (e.g. LIO fork).
 
 **1. Install Livox-SDK2** (required by livox_ros_driver2):
 
@@ -70,7 +72,7 @@ source install/setup.bash
 
 ## References
 
-- [MIT-SPARK/spark-fast-lio](https://github.com/MIT-SPARK/spark-fast-lio)
+- [Virtuals-ShoonKit/spark-fast-lio](https://github.com/Virtuals-ShoonKit/spark-fast-lio) (LIO fork with PX4 odometry output)
 - [Livox-SDK/livox_ros_driver2](https://github.com/Livox-SDK/livox_ros_driver2)
 - [PX4 ROS 2 User Guide](https://docs.px4.io/main/en/ros2/user_guide.html)
 - [Seeed MID360 wiki](https://wiki.seeedstudio.com/mid360/)
