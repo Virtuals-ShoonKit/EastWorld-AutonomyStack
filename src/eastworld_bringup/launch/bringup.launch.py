@@ -32,7 +32,8 @@ def generate_launch_description():
 
     # ── Config file paths ──────────────────────────────────────────────
     mid360_config = os.path.join(bringup_dir, "config", "mid360.yaml")
-    mavros_config = os.path.join(bringup_dir, "config", "mavros_bridge.yaml")
+    pluginlists_yaml = os.path.join(bringup_dir, "config", "px4_pluginlists.yaml")
+    config_yaml = os.path.join(bringup_dir, "config", "px4_config.yaml")
     camera_config = os.path.join(fast_livo_dir, "config", "camera_pinhole.yaml")
     rviz_config = os.path.join(fast_livo_dir, "rviz_cfg", "fast_livo2.rviz")
     livox_json = os.path.join(livox_dir, "config", "MID360_config.json")
@@ -92,14 +93,17 @@ def generate_launch_description():
         package="mavros",
         executable="mavros_node",
         name="mavros",
-        namespace="mavros",
         output="screen",
         respawn=True,
         parameters=[
-            mavros_config,
+            pluginlists_yaml,
+            config_yaml,
             {
                 "fcu_url": LaunchConfiguration("fcu_url"),
                 "gcs_url": LaunchConfiguration("gcs_url"),
+                "tgt_system": 1,
+                "tgt_component": 1,
+                "fcu_protocol": "v2.0",
             },
         ],
         arguments=["--ros-args", "--log-level", "warn"],

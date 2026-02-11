@@ -24,7 +24,8 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
 
     pkg_dir = get_package_share_directory("eastworld_bringup")
-    mavros_config = os.path.join(pkg_dir, "config", "mavros_bridge.yaml")
+    pluginlists_yaml = os.path.join(pkg_dir, "config", "px4_pluginlists.yaml")
+    config_yaml = os.path.join(pkg_dir, "config", "px4_config.yaml")
 
     # --------------- Launch arguments ---------------
     fcu_url_arg = DeclareLaunchArgument(
@@ -61,16 +62,17 @@ def generate_launch_description():
     mavros_node = Node(
         package="mavros",
         executable="mavros_node",
-        name="mavros",
-        namespace="mavros",
         output="screen",
         respawn=LaunchConfiguration("respawn"),
         parameters=[
-            mavros_config,
+            pluginlists_yaml,
+            config_yaml,
             {
                 "fcu_url": LaunchConfiguration("fcu_url"),
                 "gcs_url": LaunchConfiguration("gcs_url"),
                 "tgt_system": LaunchConfiguration("tgt_system"),
+                "tgt_component": 1,
+                "fcu_protocol": "v2.0",
             },
         ],
         arguments=["--ros-args", "--log-level", LaunchConfiguration("log_level")],

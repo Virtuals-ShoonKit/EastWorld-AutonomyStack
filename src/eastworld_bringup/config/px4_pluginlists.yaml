@@ -15,8 +15,8 @@
       # common #
       # debug_value
       - distance_sensor
-      - esc_status
-      - esc_telemetry
+      # esc_status, esc_telemetry: disabled - conflict with sys_status on /status topic
+      # (create_publisher incompatible type ESCStatus_ vs sys_status)
       # extras #
       # fake_gps
       - ftp
@@ -63,10 +63,11 @@
       # tunnel
       # vfr_hud
       - vibration
-      # vision_pose
+      - vision_pose
       # vision_speed
       # vision_speed_estimate
-      # waypoint
+      - waypoint
+      - heartbeat
       # wheel_odometry
       # wind
       # wind_estimation
