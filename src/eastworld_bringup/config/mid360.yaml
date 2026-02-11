@@ -32,8 +32,10 @@
                      0.0, 0.0, 1.0 ]
 
     # --- Gravity alignment ---
+    # NOTE: Set to true for flight — aligns odometry with gravity so "up" is correct.
+    # Set to false for bench/desk testing — skips the move-then-stop calibration step.
     gravity_alignment:
-      enable_gravity_alignment: true
+      enable_gravity_alignment: false
       acc_diff_thr: 0.2
       num_moving_frames_thr: 20
       num_gravity_measurements_thr: 20

@@ -11,7 +11,7 @@ Panels:
         - /PointCloud21/Autocompute Value Bounds1
         - /PointCloud22
       Splitter Ratio: 0.5
-    Tree Height: 818
+    Tree Height: 644
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -106,6 +106,7 @@ Visualization Manager:
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /cloud_registered
@@ -178,6 +179,7 @@ Visualization Manager:
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /cloud_registered
@@ -189,18 +191,28 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        base_link:
+          Value: true
+        imu:
+          Value: true
+        lidar:
+          Value: true
+        odom:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        odom:
+          imu:
+            {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 0; 0; 0
+    Background Color: 246; 245; 244
     Fixed Frame: odom
     Frame Rate: 30
   Name: root
@@ -259,17 +271,18 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.4302024245262146
+      Pitch: 0.06979802995920181
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.618544578552246
+      Yaw: 4.563546657562256
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1122
+  Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000002fb0000039efc0200000005fb000000100044006900730070006c006100790073010000003d0000030f000000c900fffffffb0000001200530065006c0065006300740069006f006e00000001860000009c0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007300000001cc000000bf0000005c00fffffffb0000000a00560069006500770073000000023800000145000000a400fffffffb0000000800540069006d00650100000352000000890000003900ffffff000004390000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -278,6 +291,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1885
-  X: 0
-  Y: 0
+  Width: 1850
+  X: 70
+  Y: 27
