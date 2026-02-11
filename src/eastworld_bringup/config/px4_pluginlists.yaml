@@ -11,7 +11,7 @@
       # camera
       # cellular_status
       - command
-      - companion_process_status
+      # companion_process_status: disabled - conflicts with sys_status on /status (UInt8 vs State)
       # common #
       # debug_value
       - distance_sensor
@@ -42,7 +42,7 @@
       # obstacle_distance
       # optical_flow
       - odometry
-      - onboard_computer_status
+      # onboard_computer_status: disabled - conflicts with sys_status on /status (UInt8 vs State)
       - param
       - play_tune
       # px4flow
@@ -67,7 +67,7 @@
       # vision_speed
       # vision_speed_estimate
       - waypoint
-      - heartbeat
+      # heartbeat: not a standard MAVROS plugin name
       # wheel_odometry
       # wind
       # wind_estimation
