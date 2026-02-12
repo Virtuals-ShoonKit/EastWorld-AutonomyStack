@@ -64,8 +64,9 @@
       sliding_thresh: 8.0
 
     uav:
-      imu_rate_odom: false
+      imu_rate_odom: true
       gravity_align_en: true
+      sensor_pitch_deg: 22.5   # LiDAR/IMU forward tilt from body level (positive = nose down)
 
     publish:
       dense_map_en: true

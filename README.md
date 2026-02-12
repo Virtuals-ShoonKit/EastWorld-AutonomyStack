@@ -8,3 +8,20 @@ colcon build --base-paths src/eastworld_bringup --symlink-install
 source install/setup.bash
 ros2 launch eastworld_bringup bringup.launch.py
 ```
+
+
+```
+ros2 topic echo /mavros/odometry/out --once | python3 -c "
+import sys, math, yaml
+for doc in yaml.safe_load_all(sys.stdin):
+    if doc and isinstance(doc, dict) and 'pose' in doc:
+        o = doc['pose']['pose']['orientation']
+        sinp = 2.0 * (o['w'] * o['y'] - o['z'] * o['x'])
+        pitch_deg = math.degrees(math.asin(max(-1, min(1, sinp))))
+        sinr = 2.0 * (o['w'] * o['x'] + o['y'] * o['z'])
+        cosr = 1.0 - 2.0 * (o['x']**2 + o['y']**2)
+        roll_deg = math.degrees(math.atan2(sinr, cosr))
+        print(f'Roll: {roll_deg:+.2f} deg   Pitch: {pitch_deg:+.2f} deg')
+        break
+"
+```

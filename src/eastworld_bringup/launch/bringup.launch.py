@@ -14,6 +14,7 @@ Usage:
   ros2 launch eastworld_bringup bringup.launch.py fcu_url:=udp://:14540@
 """
 
+import math
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -73,8 +74,8 @@ def generate_launch_description():
 
     use_map_camera_tf_arg = DeclareLaunchArgument(
         "use_map_camera_tf",
-        default_value="false",
-        description="Publish static TF map->camera_init",
+        default_value="true",
+        description="Publish static TFs: map->camera_init, map->odom",
     )
 
     map_frame_arg = DeclareLaunchArgument(
@@ -157,6 +158,40 @@ def generate_launch_description():
         ],
     )
 
+    map_to_odom_tf = Node(
+        condition=IfCondition(LaunchConfiguration("use_map_camera_tf")),
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="map_to_odom_tf",
+        output="screen",
+        arguments=[
+            "0", "0", "0", "0", "0", "0",
+            "map",
+            "odom",
+            "--ros-args", "--log-level", LaunchConfiguration("stack_log_level"),
+        ],
+    )
+
+    # Static TF: imu_link -> base_link  (undo sensor forward tilt)
+    # LiDAR/IMU is pitched 22° nose-down from body level.
+    # Negate to cancel the tilt: Ry(-22°) brings sensor frame back to body level.
+    SENSOR_PITCH_DEG = 22.0
+    pitch_rad = -SENSOR_PITCH_DEG * math.pi / 180.0
+
+    imu_to_base_link_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="imu_to_base_link_tf",
+        output="screen",
+        arguments=[
+            "0", "0", "0",                          # x y z  (no lever-arm offset)
+            "0", str(pitch_rad), "0",                # yaw pitch roll  (radians)
+            "imu_link",
+            "base_link",
+            "--ros-args", "--log-level", LaunchConfiguration("stack_log_level"),
+        ],
+    )
+
     # ── 4. RViz2 (optional) ───────────────────────────────────────────
     rviz2 = Node(
         condition=IfCondition(LaunchConfiguration("use_rviz")),
@@ -184,5 +219,7 @@ def generate_launch_description():
         fast_livo2,
         mavros_node,
         map_to_camera_init_tf,
+        map_to_odom_tf,
+        imu_to_base_link_tf,
         rviz2,
     ])

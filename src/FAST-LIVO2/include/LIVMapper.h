@@ -122,6 +122,9 @@ class LIVMapper {
 
   bool gravity_align_en_ = false, gravity_align_finished_ = false;
 
+  double sensor_pitch_deg_ = 0.0;
+  Eigen::Quaterniond q_imu_to_body_ = Eigen::Quaterniond::Identity();
+
   bool sync_jump_flag_ = false;
 
   bool lidar_pushed_ = false, gravity_est_en_, flg_reset_ = false,

@@ -67,11 +67,13 @@
     magnetic_stdev: 0.0
 
 # local_position
+# NOTE: plugin disabled in allowlist; FAST-LIVO2 owns odom->base_link TF.
+# If re-enabled, keep tf.send false to avoid TF conflict.
 /**/local_position:
   ros__parameters:
     frame_id: "odom"              # origin frame
     tf:
-      send: true                  # Broadcast TF
+      send: false                 # FAST-LIVO2 publishes odom->base_link
       frame_id: "odom"            # Parent frame is odom
       child_frame_id: "base_link" # Child frame is base_link
       send_fcu: false             # Keep disabled
@@ -174,8 +176,9 @@
 /**/odometry:
   ros__parameters:
     fcu:
-      odom_parent_id_des: "map"      # desired parent frame rotation of the FCU's odometry
-      odom_child_id_des: "base_link" # desired child frame rotation of the FCU's odometry
+      odom_parent_id_des: "odom"      # must match IMU-propagated odom header.frame_id
+      odom_child_id_des: "base_link"  # IMU propagation is body frame base_link
+      map_id_des: "map"
 
 # vision_pose_estimate
 /**/vision_pose:

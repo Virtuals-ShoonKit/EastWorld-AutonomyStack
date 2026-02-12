@@ -80,6 +80,7 @@ void LIVMapper::ReadParameters()
   node_->declare_parameter("time_offset.lidar_time_offset", 0.0);
   node_->declare_parameter("uav.imu_rate_odom", false);
   node_->declare_parameter("uav.gravity_align_en", false);
+  node_->declare_parameter("uav.sensor_pitch_deg", 0.0);
 
   node_->declare_parameter("evo.seq_name", "01");
   node_->declare_parameter("evo.pose_output_en", false);
@@ -140,6 +141,14 @@ void LIVMapper::ReadParameters()
   lidar_time_offset_ = node_->get_parameter("time_offset.lidar_time_offset").as_double();
   imu_prop_enable_ = node_->get_parameter("uav.imu_rate_odom").as_bool();
   gravity_align_en_ = node_->get_parameter("uav.gravity_align_en").as_bool();
+  sensor_pitch_deg_ = node_->get_parameter("uav.sensor_pitch_deg").as_double();
+
+  // Precompute IMU-to-body quaternion: undo forward pitch (Ry(-pitch) cancels sensor tilt)
+  double pitch_rad = -sensor_pitch_deg_ * M_PI / 180.0;
+  q_imu_to_body_ = Eigen::Quaterniond(Eigen::AngleAxisd(pitch_rad, Eigen::Vector3d::UnitY()));
+  RCLCPP_INFO(node_->get_logger(), "Sensor pitch: %.1f deg  q_imu_to_body: [w=%.4f x=%.4f y=%.4f z=%.4f]",
+              sensor_pitch_deg_, q_imu_to_body_.w(), q_imu_to_body_.x(),
+              q_imu_to_body_.y(), q_imu_to_body_.z());
 
   seq_name_ = node_->get_parameter("evo.seq_name").as_string();
   pose_output_en_ = node_->get_parameter("evo.pose_output_en").as_bool();
@@ -820,20 +829,41 @@ void LIVMapper::ImuPropCallback()
     posi = imu_propagate_.pos_end;
     vel_i = imu_propagate_.vel_end;
     q = Eigen::Quaterniond(imu_propagate_.rot_end);
+
+    // q is R_world_sensor (sensor orientation in gravity-aligned world).
+    // Apply sensor-to-body rotation: R_world_body = R_world_sensor * R_sensor_body
+    // where R_sensor_body = Ry(+pitch) undoes the forward tilt.
+    Eigen::Quaterniond q_body = q * q_imu_to_body_;
+
+    // Odom message to MAVROS → PX4: body-frame orientation
     imu_prop_odom_.header.frame_id = "odom";
     imu_prop_odom_.child_frame_id = "base_link";
     imu_prop_odom_.header.stamp = newest_imu_.header.stamp;
     imu_prop_odom_.pose.pose.position.x = posi.x();
     imu_prop_odom_.pose.pose.position.y = posi.y();
     imu_prop_odom_.pose.pose.position.z = posi.z();
-    imu_prop_odom_.pose.pose.orientation.w = q.w();
-    imu_prop_odom_.pose.pose.orientation.x = q.x();
-    imu_prop_odom_.pose.pose.orientation.y = q.y();
-    imu_prop_odom_.pose.pose.orientation.z = q.z();
+    imu_prop_odom_.pose.pose.orientation.w = q_body.w();
+    imu_prop_odom_.pose.pose.orientation.x = q_body.x();
+    imu_prop_odom_.pose.pose.orientation.y = q_body.y();
+    imu_prop_odom_.pose.pose.orientation.z = q_body.z();
     imu_prop_odom_.twist.twist.linear.x = vel_i.x();
     imu_prop_odom_.twist.twist.linear.y = vel_i.y();
     imu_prop_odom_.twist.twist.linear.z = vel_i.z();
     pub_imu_prop_odom_->publish(imu_prop_odom_);
+
+    // Broadcast odom -> imu_link TF (raw sensor pose)
+    geometry_msgs::msg::TransformStamped odom_tf;
+    odom_tf.header.stamp = imu_prop_odom_.header.stamp;
+    odom_tf.header.frame_id = "odom";
+    odom_tf.child_frame_id = "imu_link";
+    odom_tf.transform.translation.x = posi.x();
+    odom_tf.transform.translation.y = posi.y();
+    odom_tf.transform.translation.z = posi.z();
+    odom_tf.transform.rotation.w = q.w();
+    odom_tf.transform.rotation.x = q.x();
+    odom_tf.transform.rotation.y = q.y();
+    odom_tf.transform.rotation.z = q.z();
+    tf_broadcaster_->sendTransform(odom_tf);
   }
   mtx_buffer_imu_prop_.unlock();
 }
