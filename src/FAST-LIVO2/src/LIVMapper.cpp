@@ -312,10 +312,8 @@ void LIVMapper::InitializeSubscribersAndPublishers()
       node_->create_publisher<sensor_msgs::msg::PointCloud2>("/dyn_obj_removed", qos);
   pub_laser_cloud_dyn_dbg_ =
       node_->create_publisher<sensor_msgs::msg::PointCloud2>("/dyn_obj_dbg_hist", qos);
-  mavros_pose_publisher_ =
-      node_->create_publisher<geometry_msgs::msg::PoseStamped>("/mavros/vision_pose/pose", qos);
   pub_imu_prop_odom_ =
-      node_->create_publisher<nav_msgs::msg::Odometry>("/LIVO2/imu_propagate", qos_large);
+      node_->create_publisher<nav_msgs::msg::Odometry>("/mavros/odometry/out", qos);
 
   // Image transport publisher
   pub_image_ = std::make_shared<image_transport::Publisher>(
@@ -323,7 +321,7 @@ void LIVMapper::InitializeSubscribersAndPublishers()
 
   // Timer for IMU propagation
   imu_prop_timer_ = node_->create_wall_timer(
-      std::chrono::milliseconds(4),
+      std::chrono::milliseconds(20),
       std::bind(&LIVMapper::ImuPropCallback, this));
 
   // TF broadcaster
@@ -593,7 +591,6 @@ void LIVMapper::HandleLIO()
     voxel_map_manager_->PubVoxelMapLRU();
   }
   PublishPath();
-  PublishMavros();
 
   frame_num_++;
   aver_time_consu_ =
@@ -823,7 +820,8 @@ void LIVMapper::ImuPropCallback()
     posi = imu_propagate_.pos_end;
     vel_i = imu_propagate_.vel_end;
     q = Eigen::Quaterniond(imu_propagate_.rot_end);
-    imu_prop_odom_.header.frame_id = "world";
+    imu_prop_odom_.header.frame_id = "odom";
+    imu_prop_odom_.child_frame_id = "base_link";
     imu_prop_odom_.header.stamp = newest_imu_.header.stamp;
     imu_prop_odom_.pose.pose.position.x = posi.x();
     imu_prop_odom_.pose.pose.position.y = posi.y();
@@ -1471,14 +1469,6 @@ void LIVMapper::PublishOdometry()
 
   tf_broadcaster_->sendTransform(transform_stamped);
   pub_odom_aft_mapped_->publish(odom_aft_mapped_);
-}
-
-void LIVMapper::PublishMavros()
-{
-  msg_body_pose_.header.stamp = node_->now();
-  msg_body_pose_.header.frame_id = "camera_init";
-  SetPosestamp(msg_body_pose_.pose);
-  mavros_pose_publisher_->publish(msg_body_pose_);
 }
 
 void LIVMapper::PublishPath()

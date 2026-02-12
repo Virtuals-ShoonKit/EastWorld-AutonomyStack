@@ -14,7 +14,7 @@
       - companion_process_status
       # common #
       # debug_value
-      - distance_sensor
+      # distance_sensor
       # esc_status, esc_telemetry: disabled - conflict with sys_status on /status topic
       # (create_publisher incompatible type ESCStatus_ vs sys_status)
       # extras #
@@ -31,7 +31,7 @@
       # image_pub
       - imu
       - landing_target
-      - local_position
+      # local_position
       - log_transfer
       - mag_calibration_status
       - manual_control

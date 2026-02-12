@@ -4,7 +4,7 @@ EastWorld AutonomyStack bringup launch composition.
 
 Launches the full flight stack in one command:
   1. Livox MID360 driver  (LiDAR + IMU @ 20 Hz)
-  2. FAST-LIVO2 LIO-only  (pose estimation, publishes /mavros/vision_pose/pose)
+  2. FAST-LIVO2 LIO-only  (pose estimation, IMU-propagated odom -> /mavros/odometry/out @ 50 Hz)
   3. MAVROS bridge         (PX4 <-> ROS2 over /dev/ttyTHS1:921600)
   4. RViz2 (optional)
 
@@ -23,6 +23,7 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
+os.environ["ROS_DOMAIN_ID"] = "42"
 
 def generate_launch_description():
 
@@ -99,7 +100,7 @@ def generate_launch_description():
             {"xfer_format": 1},  # 0=PointCloud2, 1=CustomMsg (required by FAST-LIVO lidar_type 1)
             {"multi_topic": 0},
             {"data_src": 0},
-            {"publish_freq": 20.0},
+            {"publish_freq": 10.0},
             {"output_data_type": 0},
             {"frame_id": "livox_frame"},
             {"user_config_path": livox_json},

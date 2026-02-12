@@ -3,8 +3,8 @@
 MAVROS bridge launch file for PX4 over UART.
 
 Connects to PX4 flight controller via /dev/ttyTHS1 at 921600 baud.
-Receives vision pose from FAST-LIVO2 on /mavros/vision_pose/pose and
-forwards it to PX4 EKF2 for external vision fusion.
+Receives IMU-propagated odometry from FAST-LIVO2 on /mavros/odometry/out
+and forwards it to PX4 EKF2 for external vision fusion.
 
 Usage:
   ros2 launch eastworld_bringup mavros.launch.py

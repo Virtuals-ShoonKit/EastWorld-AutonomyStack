@@ -65,7 +65,6 @@ class LIVMapper {
   void PublishVisualSubMap();
   void PublishEffectWorld(const std::vector<PointToPlane> &ptpl_list);
   void PublishOdometry();
-  void PublishMavros();
   void PublishPath();
   void ReadParameters();
   template <typename T>
@@ -199,7 +198,6 @@ class LIVMapper {
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_laser_cloud_dyn_rmed_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_laser_cloud_dyn_dbg_;
   std::shared_ptr<image_transport::Publisher> pub_image_;
-  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr mavros_pose_publisher_;
   rclcpp::TimerBase::SharedPtr imu_prop_timer_;
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
