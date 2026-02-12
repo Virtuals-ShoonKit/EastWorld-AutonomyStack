@@ -20,6 +20,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
+os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
 def generate_launch_description():
 
@@ -36,7 +37,7 @@ def generate_launch_description():
 
     gcs_url_arg = DeclareLaunchArgument(
         "gcs_url",
-        default_value="udp://:14550@127.0.0.1:14550",
+        default_value="udp://:14555@127.0.0.1:14550",
         description="GCS bridge URL (QGC on localhost)",
     )
 

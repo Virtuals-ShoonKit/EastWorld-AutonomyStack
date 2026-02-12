@@ -83,3 +83,7 @@
       colmap_output_en: false # need to set interval = -1
       filter_size_pcd: 0.3
       interval: -1
+
+    debug:
+      print_timing: false
+      print_lio_stats: false

@@ -11,7 +11,7 @@
       # camera
       # cellular_status
       - command
-      # companion_process_status: disabled - conflicts with sys_status on /status (UInt8 vs State)
+      - companion_process_status
       # common #
       # debug_value
       - distance_sensor
@@ -30,7 +30,7 @@
       - home_position
       # image_pub
       - imu
-      # landing_target
+      - landing_target
       - local_position
       - log_transfer
       - mag_calibration_status
@@ -38,11 +38,11 @@
       # mocap_pose_estimate
       # mount_control
       # nav_controller_output
-      # obstacle
-      # obstacle_distance
+      - obstacle
+      - obstacle_distance
       # optical_flow
-      # odometry: disabled - conflicts with local_position on /local (PoseStamped vs Odometry)
-      # onboard_computer_status: disabled - conflicts with sys_status on /status (UInt8 vs State)
+      - odometry
+      - onboard_computer_status
       - param
       - play_tune
       # px4flow
@@ -63,7 +63,7 @@
       # tunnel
       # vfr_hud
       - vibration
-      - vision_pose
+      # vision_pose
       # vision_speed
       # vision_speed_estimate
       - waypoint

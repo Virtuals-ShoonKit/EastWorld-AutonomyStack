@@ -196,18 +196,3 @@
 /**/camera:
   ros__parameters:
     frame_id: "base_link"
-
-# distance_sensor
-## Currently available orientations:
-#    Check http://wiki.ros.org/mavros/Enumerations
-##
-# /**/distance_sensor:
-#   ros__parameters:
-#     config: |
-#       hps167_pub:
-#         id: 0
-#         frame_id: "hps167_frame"
-#         # orientation: PITCH_270  # sended by FCU
-#         field_of_view: 0.0        # XXX TODO
-#         send_tf: true
-#         sensor_position: {x:  0.0, y:  0.0, z:  -0.1}
