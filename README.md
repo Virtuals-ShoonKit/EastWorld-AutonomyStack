@@ -1,16 +1,42 @@
-```
+## Build
+
+```bash
+# Install CycloneDDS RMW and Foxglove Bridge
+sudo apt install ros-humble-rmw-cyclonedds-cpp ros-humble-foxglove-bridge
+
+# Build Livox driver
 ./src/livox_ros_driver2/build.sh humble
+
+# Build bringup
 colcon build --base-paths src/eastworld_bringup --symlink-install
 ```
 
+## Run
 
-```
+```bash
 source install/setup.bash
 ros2 launch eastworld_bringup bringup.launch.py
 ```
 
+## Launch on boot (systemd)
 
+```bash
+# Install and enable the systemd service
+sudo cp src/eastworld_bringup/systemd/eastworld-autonomy.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable eastworld-autonomy.service
+
+# Start now (or reboot)
+sudo systemctl start eastworld-autonomy.service
+
+# Check status / logs
+systemctl status eastworld-autonomy.service
+journalctl -u eastworld-autonomy.service -f
 ```
+
+## Verify odometry pitch correction
+
+```bash
 ros2 topic echo /mavros/odometry/out --once | python3 -c "
 import sys, math, yaml
 for doc in yaml.safe_load_all(sys.stdin):

@@ -6,7 +6,8 @@ Launches the full flight stack in one command:
   1. Livox MID360 driver  (LiDAR + IMU @ 20 Hz)
   2. FAST-LIVO2 LIO-only  (pose estimation, IMU-propagated odom -> /mavros/odometry/out @ 50 Hz)
   3. MAVROS bridge         (PX4 <-> ROS2 over /dev/ttyTHS1:921600)
-  4. RViz2 (optional)
+  4. Foxglove Bridge       (WebSocket server for Foxglove Studio, default port 8765)
+  5. RViz2 (optional)
 
 Usage:
   ros2 launch eastworld_bringup bringup.launch.py
@@ -25,6 +26,7 @@ from ament_index_python.packages import get_package_share_directory
 
 os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 os.environ["ROS_DOMAIN_ID"] = "42"
+os.environ["RMW_IMPLEMENTATION"] = "rmw_cyclonedds_cpp"
 
 def generate_launch_description():
 
@@ -35,6 +37,8 @@ def generate_launch_description():
 
     # ── Config file paths ──────────────────────────────────────────────
     mid360_config = os.path.join(bringup_dir, "config", "mid360.yaml")
+    cyclonedds_xml = os.path.join(bringup_dir, "config", "cyclonedds.xml")
+    os.environ.setdefault("CYCLONEDDS_URI", f"file://{cyclonedds_xml}")
     pluginlists_yaml = os.path.join(bringup_dir, "config", "px4_pluginlists.yaml")
     config_yaml = os.path.join(bringup_dir, "config", "px4_config.yaml")
     rviz_config = os.path.join(bringup_dir, "config", "fast-livo.rviz")
@@ -88,6 +92,18 @@ def generate_launch_description():
         "camera_init_frame",
         default_value="camera_init",
         description="Child frame for static TF",
+    )
+
+    use_foxglove_arg = DeclareLaunchArgument(
+        "use_foxglove",
+        default_value="true",
+        description="Launch Foxglove Bridge WebSocket server",
+    )
+
+    foxglove_port_arg = DeclareLaunchArgument(
+        "foxglove_port",
+        default_value="8765",
+        description="Foxglove Bridge WebSocket port",
     )
 
     # ── 1. Livox MID360 driver ─────────────────────────────────────────
@@ -192,7 +208,23 @@ def generate_launch_description():
         ],
     )
 
-    # ── 4. RViz2 (optional) ───────────────────────────────────────────
+    # ── 4. Foxglove Bridge ─────────────────────────────────────────────
+    foxglove_bridge = Node(
+        condition=IfCondition(LaunchConfiguration("use_foxglove")),
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        name="foxglove_bridge",
+        output="screen",
+        parameters=[
+            {"port": LaunchConfiguration("foxglove_port")},
+            {"address": "0.0.0.0"},
+            {"send_buffer_limit": 10000000},
+            {"use_sim_time": False},
+        ],
+        arguments=["--ros-args", "--log-level", LaunchConfiguration("stack_log_level")],
+    )
+
+    # ── 5. RViz2 (optional) ───────────────────────────────────────────
     rviz2 = Node(
         condition=IfCondition(LaunchConfiguration("use_rviz")),
         package="rviz2",
@@ -215,11 +247,14 @@ def generate_launch_description():
         use_map_camera_tf_arg,
         map_frame_arg,
         camera_init_frame_arg,
+        use_foxglove_arg,
+        foxglove_port_arg,
         livox_driver,
         fast_livo2,
         mavros_node,
         map_to_camera_init_tf,
         map_to_odom_tf,
         imu_to_base_link_tf,
+        foxglove_bridge,
         rviz2,
     ])
