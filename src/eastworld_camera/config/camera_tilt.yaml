@@ -1,0 +1,41 @@
+# ──────────────────────────────────────────────────────────────────────────
+#  Camera Tilt Servo Controller — default parameters
+# ──────────────────────────────────────────────────────────────────────────
+#  Controls a PX4 "Peripheral Actuator Set 1" output via MAVROS
+#  MAV_CMD_DO_SET_ACTUATOR (187).
+#
+#  Normalized values (-1.0 to 1.0) map to PWM through PX4's output
+#  min/max configuration:  -1 → PWM_MIN,  0 → center,  +1 → PWM_MAX.
+#
+#  actuator_index: which actuator within the set (1-6).
+#    If MAIN5 is the only output assigned to Peripheral Actuator Set 1,
+#    it is actuator 1.
+#
+#  To test from the command line:
+#    ros2 service call /camera_tilt/set_forward std_srvs/srv/Trigger
+#    ros2 service call /camera_tilt/set_half    std_srvs/srv/Trigger
+#    ros2 service call /camera_tilt/set_down    std_srvs/srv/Trigger
+# ──────────────────────────────────────────────────────────────────────────
+camera_tilt:
+  ros__parameters:
+    # ── Actuator index (1-6 within Peripheral Actuator Set 1) ────────
+    actuator_index: 1
+
+    # ── Normalized values (-1.0 to 1.0) ─────────────────────────────
+    value_forward: -1.0           # Face forward (default position)
+    value_half:     0.0           # Halfway between forward and down
+    value_down:     1.0           # Face straight down
+
+    # ── RC switch input (optional) ──────────────────────────────────
+    # Set to your RC channel number (1-18) to map a 3-position switch.
+    # Set to 0 to disable RC control.
+    rc_channel: 7
+    # PWM thresholds for 3-position mapping:
+    #   < rc_threshold_low  → forward
+    #   > rc_threshold_high → down
+    #   between             → half
+    rc_threshold_low: 1250
+    rc_threshold_high: 1750
+
+    # ── MAVROS service path ──────────────────────────────────────────
+    mavros_cmd_service: "/mavros/cmd/command"

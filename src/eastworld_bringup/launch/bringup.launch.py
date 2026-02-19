@@ -7,7 +7,8 @@ Launches the full flight stack in one command:
   2. FAST-LIVO2 LIO-only  (pose estimation, IMU-propagated odom -> /mavros/odometry/out @ 50 Hz)
   3. MAVROS bridge         (PX4 <-> ROS2 over /dev/ttyTHS1:921600)
   4. Foxglove Bridge       (WebSocket server for Foxglove Studio, default port 8765)
-  5. RViz2 (optional)
+  5. CSI Camera streamer   (HW H.264 for Foxglove, optional, use_camera:=true)
+  6. RViz2 (optional)
 
 Usage:
   ros2 launch eastworld_bringup bringup.launch.py
@@ -104,6 +105,18 @@ def generate_launch_description():
         "foxglove_port",
         default_value="8765",
         description="Foxglove Bridge WebSocket port",
+    )
+
+    use_camera_arg = DeclareLaunchArgument(
+        "use_camera",
+        default_value="true",
+        description="Launch CSI camera streamer (H.264 to Foxglove)",
+    )
+
+    use_camera_tilt_arg = DeclareLaunchArgument(
+        "use_camera_tilt",
+        default_value="true",
+        description="Launch camera tilt servo controller",
     )
 
     # ── 1. Livox MID360 driver ─────────────────────────────────────────
@@ -218,13 +231,42 @@ def generate_launch_description():
         parameters=[
             {"port": LaunchConfiguration("foxglove_port")},
             {"address": "0.0.0.0"},
-            {"send_buffer_limit": 10000000},
+            {"send_buffer_limit": 2000000},
             {"use_sim_time": False},
         ],
         arguments=["--ros-args", "--log-level", LaunchConfiguration("stack_log_level")],
     )
 
-    # ── 5. RViz2 (optional) ───────────────────────────────────────────
+    # ── 5. CSI Camera streamer (optional) ─────────────────────────────
+    eastworld_camera_dir = get_package_share_directory("eastworld_camera")
+    csi_camera_config = os.path.join(eastworld_camera_dir, "config", "csi_streamer.yaml")
+
+    csi_camera = Node(
+        condition=IfCondition(LaunchConfiguration("use_camera")),
+        package="eastworld_camera",
+        executable="csi_streamer",
+        name="csi_streamer",
+        output="screen",
+        parameters=[csi_camera_config],
+        arguments=["--ros-args", "--log-level", LaunchConfiguration("stack_log_level")],
+    )
+
+    # ── 5b. Camera tilt servo controller (optional) ─────────────────
+    camera_tilt_config = os.path.join(
+        eastworld_camera_dir, "config", "camera_tilt.yaml"
+    )
+
+    camera_tilt = Node(
+        condition=IfCondition(LaunchConfiguration("use_camera_tilt")),
+        package="eastworld_camera",
+        executable="camera_tilt",
+        name="camera_tilt",
+        output="screen",
+        parameters=[camera_tilt_config],
+        arguments=["--ros-args", "--log-level", LaunchConfiguration("stack_log_level")],
+    )
+
+    # ── 6. RViz2 (optional) ───────────────────────────────────────────
     rviz2 = Node(
         condition=IfCondition(LaunchConfiguration("use_rviz")),
         package="rviz2",
@@ -249,6 +291,8 @@ def generate_launch_description():
         camera_init_frame_arg,
         use_foxglove_arg,
         foxglove_port_arg,
+        use_camera_arg,
+        use_camera_tilt_arg,
         livox_driver,
         fast_livo2,
         mavros_node,
@@ -256,5 +300,7 @@ def generate_launch_description():
         map_to_odom_tf,
         imu_to_base_link_tf,
         foxglove_bridge,
+        csi_camera,
+        camera_tilt,
         rviz2,
     ])

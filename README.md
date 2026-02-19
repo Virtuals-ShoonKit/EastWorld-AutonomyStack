@@ -2,7 +2,7 @@
 
 ```bash
 # Install CycloneDDS RMW and Foxglove Bridge
-sudo apt install ros-humble-rmw-cyclonedds-cpp ros-humble-foxglove-bridge
+sudo apt install ros-humble-rmw-cyclonedds-cpp ros-humble-foxglove-bridge ros-humble-foxglove-msgs
 
 # Build Livox driver
 ./src/livox_ros_driver2/build.sh humble
@@ -51,3 +51,8 @@ for doc in yaml.safe_load_all(sys.stdin):
         break
 "
 ```
+
+
+ros2 service call /mavros/cmd/command mavros_msgs/srv/CommandLong "{command: 187, param1: -1.0, param7: 0.0}"
+
+

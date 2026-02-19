@@ -1,0 +1,31 @@
+# ──────────────────────────────────────────────────────────────────────────
+#  CSI Camera Streamer — default parameters
+# ──────────────────────────────────────────────────────────────────────────
+#  H.264 @ 720p30, 2 Mbps → ideal for WiFi streaming to Foxglove Studio.
+#  Adjust bitrate/resolution to match your link quality.
+#
+#  Bandwidth estimates (H.264):
+#    720p30  @ 2 Mbps  — reliable on most WiFi
+#    720p30  @ 4 Mbps  — higher quality, still fine on 5 GHz
+#    1080p30 @ 4 Mbps  — needs good 5 GHz link
+#    480p30  @ 1 Mbps  — very constrained links
+# ──────────────────────────────────────────────────────────────────────────
+csi_streamer:
+  ros__parameters:
+    # ── Camera ──────────────────────────────────────────────────────
+    sensor_id: 0              # CSI sensor index (0 = first camera)
+    width: 1280
+    height: 720
+    fps: 30
+
+    # ── Encoding ────────────────────────────────────────────────────
+    encoding: "h264"          # "h264" (recommended) or "jpeg"
+    h264_bitrate: 1500000     # Target bitrate in bps (2 Mbps)
+    h264_gop: 15              # Keyframe interval (= 1 per second at 30 fps)
+    jpeg_quality: 50          # JPEG quality 1-100 (only used in jpeg mode)
+
+    # ── ROS ─────────────────────────────────────────────────────────
+    frame_id: "drone_camera"
+    topic: "/drone_camera/image"
+    # H.264 publishes on: /drone_camera/image/h264   (foxglove_msgs/CompressedVideo)
+    # JPEG  publishes on: /drone_camera/image/compressed (sensor_msgs/CompressedImage)

@@ -48,7 +48,7 @@
       # px4flow
       # rallypoint
       # - rangefinder
-      # rc_io: disabled - conflicts on /mavros/rc/in topic (RCIn_ type clash)
+      - rc_io
       # setpoint_accel
       # setpoint_attitude
       - setpoint_position
